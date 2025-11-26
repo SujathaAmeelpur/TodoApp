@@ -1,31 +1,37 @@
-const express = require("express");
-const cors = require("cors");
-const app = express();
+import React, {useState, useEffect} from 'react';
 
-app.use(cors());
-app.use(express.json());
+function TodoApp(){
+  const [text, setText] = useState("");
+  const [todos, setTodos] = useState([]);
 
-let todos = [];
+  useEffect(()=>{
+    fetch("http://localhost:5000/todos")
+    .then(res => res.json())
+    .then(data => setTodos(data));
+  },[]);
 
-app.get('/todos', (req, res)=>{
-    res.json(todos)
-});
+  const addTodo = ()=> {
+    fetch("http://localhost:5000/todos", {
+        method: 'POST',
+        body: JSON.stringify({text}),
+    })
+    .then(res => res.json())
+    .then(data => setTodos([...todos, data]));
 
-app.post('/todos', (req, res) => {
-    console.log(req)
-    const {text} = req.body
+    setText("");
+  };
 
-    if(!text){
-        return res.status(400).json({error: "Text is required"});
-    }
+  return (
+    <div>
+        <h1>Todo App</h1>
+        <input type = "text" value = {text} onChange = {(e)=> setText(e.target.value)}  />
+        <button onClick = {addTodo}>Add</button>
 
-    const newTodo = {
-        id: Date.now(), text
-    };
-    todos.push(newTodo);
-    res.json(newTodo);
-});
+        <ul>
+            {todos.map(todo => <li key = {todo.id} >{todo.text}</li>)}
+        </ul>
+    </div>
+  );
+}
 
-app.listen(5000, ()=> {
-    console.log("Server running on http://localhost:5000");
-});
+export default TodoApp;
